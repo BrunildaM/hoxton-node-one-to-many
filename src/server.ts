@@ -8,7 +8,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const port = 4000;
+const port = 6000;
 
 const getAllMuseums = db.prepare(`
 SELECT * FROM museums
@@ -38,7 +38,11 @@ const createWork = db.prepare(`
 INSERT INTO works (name, picture, museumId) VALUES (?, ?, ?)
 `);
 
-app.get("/museums", (req, res) => {
+const updateWorkLocation = db.prepare(`
+UPDATE works SET museumId =? WHERE id = ?
+`)
+
+app.get('/museums', (req, res) => {
   const museums = getAllMuseums.all();
 
   for (let museum of museums) {
@@ -141,6 +145,33 @@ app.post("/works", (req, res) => {
     res.status(400).send({ errors });
   }
 });
+
+app.patch('/works/:id', (req, res) => {
+    const id = req.params.id;
+    const museumId = req.body.museumId;
+
+    const museum = getMuseumById.get(museumId);
+
+    const errors: string[] = [];
+
+    if(typeof museumId !== "number") {
+        errors.push("The museumId is not provided or is not a number");
+    }
+
+    if(errors.length === 0) {
+        if(museum) {
+          const newMuseum = updateWorkLocation.run(museumId);
+            const work = getWorkById.get(id);
+            work.museum = newMuseum;
+            res.send(work);
+        } else {
+            res.status(400).send({ error: "You are trying to put the work in a museum that doesn not exists"});
+        }
+    } else{
+        res.status(400).send({ error: errors });
+    }
+
+})
 
 app.listen(port, () => {
   console.log(`App is running in: http://localhost/${port}`);
