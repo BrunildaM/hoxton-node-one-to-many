@@ -8,7 +8,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const port = 6000;
+const port = 5678;
 
 const getAllMuseums = db.prepare(`
 SELECT * FROM museums
@@ -174,5 +174,5 @@ app.patch('/works/:id', (req, res) => {
 })
 
 app.listen(port, () => {
-  console.log(`App is running in: http://localhost/${port}`);
+  console.log(`App is running in: http://localhost:${port}`);
 });
